@@ -1,7 +1,7 @@
 import React, { Component } from "react";
 import "whatwg-fetch";
 
-import { getFromStorge, setInStorage } from "../../utils/storage.js";
+import { getFromStorage, setInStorage } from "../../utils/storage";
 
 class Home extends Component {
   constructor(props) {
@@ -17,7 +17,9 @@ class Home extends Component {
       signUpFirstName: "",
       signUpLastName: "",
       signUpEmail: "",
-      signUpPassword: ""
+      signUpPassword: "",
+      userInput: '',
+      list: []
     };
     this.onTextboxChangeSignInEmail = this.onTextboxChangeSignInEmail.bind(
       this
@@ -43,10 +45,10 @@ class Home extends Component {
     this.logout = this.logout.bind(this);
   }
   componentDidMount() {
-    const obj = getFromStorge("the_main_app");
+    const obj = getFromStorage('the_main_app');
     if (obj && obj.token) {
       const { token } = obj;
-      fetch("api/account/verify?token=" + token)
+      fetch('api/account/verify?token=' + token)
         .then(res => res.json())
         .then(json => {
           if (json.success) {
@@ -110,7 +112,7 @@ class Home extends Component {
     fetch("/api/account/signup", {
       method: "POST",
       headers: {
-        'Content-Type': 'application/json'
+        "Content-Type": "application/json"
       },
       body: JSON.stringify({
         firstName: signUpFirstName,
@@ -125,10 +127,10 @@ class Home extends Component {
           this.setState({
             signUpError: json.message,
             isLoading: false,
-            signUpEmail: ' ',
-            signUpPassword: ' ',
-            signUpFirstName: ' ',
-            signUpLastName: ' '
+            signUpEmail: " ",
+            signUpPassword: " ",
+            signUpFirstName: " ",
+            signUpLastName: " "
           });
         } else {
           this.setState({
@@ -177,10 +179,10 @@ class Home extends Component {
     this.setState({
       isLoading: true
     });
-    const obj = getFromStorge("the_main_app");
+    const obj = getFromStorage("the_main_app");
     if (obj && obj.token) {
       const { token } = obj;
-      fetch('api/account/logout?token=' + token)
+      fetch("api/account/logout?token=" + token)
         .then(res => res.json())
         .then(json => {
           if (json.success) {
@@ -200,6 +202,24 @@ class Home extends Component {
       });
     }
   }
+
+  /*/----------------------------------------------------------/*/
+  changeUserInput(input) {
+    this.setState({
+      userInput: input
+    });
+  }
+  addtolist(input) {
+    let listArray = this.state.list;
+
+    listArray.push(input);
+
+    this.setState({
+      list: listArray,
+      userInput: ""
+    });
+  }
+
   render() {
     const {
       isLoading,
@@ -211,7 +231,7 @@ class Home extends Component {
       signUpLastName,
       signUpEmail,
       signUpPassword,
-      signUpError,
+      signUpError
     } = this.state;
     if (isLoading) {
       return (
@@ -225,6 +245,7 @@ class Home extends Component {
         <div>
           <div>
             {signInError ? <p>{signInError}</p> : null}
+
             <p>Sign In</p>
             <input
               type="email"
@@ -284,8 +305,24 @@ class Home extends Component {
     }
 
     return (
-      <div>
+      <div className="to-do-list-main">
         <p>Account</p>
+        <input
+          onChange={e => this.changeUserInput(e.target.value)}
+          value={this.state.userInput}
+          type="text"
+          placeholder="To Do List"
+        />
+        <button onClick={() => this.addtolist(this.state.userInput)}>
+          Add
+        </button>
+
+        <ul>
+          {this.state.list.map(val => (
+            <li>{val}</li>
+          ))}
+        </ul>
+
         <button onClick={this.logout}>Logout</button>
       </div>
     );

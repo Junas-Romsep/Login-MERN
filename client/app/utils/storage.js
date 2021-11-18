@@ -1,4 +1,4 @@
-export function getFromStorge(key){
+export function getFromStorage(key){
     if(!key){
         return null;
     }

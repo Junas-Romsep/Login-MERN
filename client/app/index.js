@@ -12,7 +12,7 @@ import NotFound from './components/App/NotFound';
 
 import Home from './components/Home/Home';
 
-import Todolist from './components/ToDoList/Todolist';
+
 
 import './styles/styles.scss';
 
@@ -21,7 +21,6 @@ render((
     <App>
       <Switch>
         <Route exact path="/" component={Home}/>
-        <Route path="/todolist" component={Todolist}/>
         <Route component={NotFound}/>
       </Switch>
     </App>
