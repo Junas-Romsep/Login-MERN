@@ -1,0 +1,193 @@
+const User = require("../../models/User");
+const UserSeassion = require("../../models/UserSession");
+
+module.exports = app => {
+  app.post("/api/account/signup",
+    (req, res, next) => {
+      const { body } = req;
+      console.log('body',body);
+      const { firstName, lastName, password } = body;
+      let { email } = body;
+
+      if (!firstName) {
+        return res.send({
+          sucess: false,
+          message: "Error: Namn kan inte vara tomt"
+        });
+      }
+      if (!lastName) {
+        return res.send({
+          sucess: false,
+          message: "Error: Efternamn kan inte vara tomt"
+        });
+      }
+      if (!email) {
+        return res.send({
+          sucess: false,
+          message: "Error: Email kan inte vara tomt"
+        });
+      }
+      if (!password) {
+        return res.send({
+          sucess: false,
+          message: "Error: Fel på Lösenorden"
+        });
+      }
+      console.log("här");
+      email = email.toLowerCase();
+      User.find(
+        {
+          email: email
+        },
+        (err, previousUser) => {
+          if (err) {
+            return res.send({
+              sucess: false,
+              message: "Error: Server Error"
+            });
+          } else if (previousUser.length > 0) {
+            return res.send({
+              sucess: false,
+              message: "Error: Konto Existerar "
+            });
+          }
+
+          const newUser = new User();
+          newUser.email = email;
+          newUser.firstName = firstName;
+          newUser.lastName = lastName;
+          newUser.password = newUser.generateHash(password);
+          newUser.save((err, user) => {
+            if (err) {
+              return res.send({
+                sucess: false,
+                message: "Error: Server Error"
+              });
+            }
+            return res.send({
+              sucess: true,
+              message: "Signed up"
+            });
+          });
+        });
+    });
+  app.post("/api/account/signin", (req, res, next) => {
+    const { body } = req;
+    
+    const { password } = body;
+    let { email } = body;
+
+    if (!email) {
+      return res.send({
+        sucess: false,
+        message: "Error: Email kan inte vara tomt"
+      });
+    }
+    if (!password) {
+      return res.send({
+        sucess: false,
+        message: "Error: Fel på Lösenorden"
+      });
+    }
+
+    email = email.toLowerCase();
+
+    User.find(
+      {
+        email: email
+      },
+      (err, users) => {
+        if (err) {
+          return res.send({
+            sucess: false,
+            message: "Error: Server Error"
+          });
+        }
+
+        if (users.length != 1) {
+          return res.send({
+            sucess: false,
+            message: "Error: Invalid"
+          });
+        }
+        const user = users[0];
+        if (!user.validPassword(password)) {
+          return res.send({
+            sucess: false,
+            message: "Error: Invalid"
+          });
+        }
+
+        const userSeassion = new UserSeassion();
+        userSeassion.userId = user._id;
+        userSeassion.save((err, doc) => {
+          if (err) {
+            return res.send({
+              sucess: false,
+              message: "Error: Server Error"
+            });
+          }
+          return res.send({
+            sucess: true,
+            message: "Valid Signin",
+            token: doc._id
+          })
+        });
+      }
+    );
+  });
+  app.get("/api/account/verify", (req, res, next) => {
+    const {query} = req;
+    const {token} = query;
+
+    UserSeassion.find({
+      _id:token,
+      isDeleted: false
+    } , (err, seassion) =>{
+      if(err){
+        return res.send({
+          success: false,
+          message:'Error: Sever error'
+        });
+      };
+      if(seassion.length != 1){
+        return res.send({
+          success: false,
+          message:'Error: Invalid'
+        });
+      }else{
+        return res.send({
+          success: true,
+          message:'Good'
+        });
+      }
+    });
+  });
+  app.get('/api/account/logout', (req, res, next) => {
+    // Get the token
+    const { query } = req;
+    const { token } = query;
+    // ?token=test
+    // Verify the token is one of a kind and it's not deleted.
+    UserSession.findOneAndUpdate({
+      _id: token,
+      isDeleted: false
+    }, {
+      $set: {
+        isDeleted:true
+      }
+    }, null, (err, sessions) => {
+      if (err) {
+        console.log(err);
+        return res.send({
+          success: false,
+          message: 'Error: Server error'
+        });
+      }
+      return res.send({
+        success: true,
+        message: 'Good'
+      });
+    });
+  });
+};
