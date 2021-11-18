@@ -1,5 +1,5 @@
 const User = require("../../models/User");
-const UserSeassion = require("../../models/UserSession");
+const UserSession = require("../../models/UserSession");
 
 module.exports = app => {
   app.post("/api/account/signup",
@@ -73,74 +73,77 @@ module.exports = app => {
     });
   app.post("/api/account/signin", (req, res, next) => {
     const { body } = req;
-    
-    const { password } = body;
-    let { email } = body;
+    const {
+      password
+    } = body;
+    let {
+      email
+    } = body;
 
     if (!email) {
       return res.send({
-        sucess: false,
-        message: "Error: Email kan inte vara tomt"
+        success: false,
+        message: 'Error: Email cannot be blank.'
       });
     }
     if (!password) {
       return res.send({
-        sucess: false,
-        message: "Error: Fel på Lösenorden"
+        success: false,
+        message: 'Error: Password cannot be blank.'
       });
     }
 
     email = email.toLowerCase();
+    email = email.trim();
 
-    User.find(
-      {
-        email: email
-      },
-      (err, users) => {
-        if (err) {
-          return res.send({
-            sucess: false,
-            message: "Error: Server Error"
-          });
-        }
+    User.find({
+      email: email
+    }, (err, users) => {
+      if (err) {
+        console.log('err 2:', err);
+        return res.send({
+          success: false,
+          message: 'Error: server error'
+        });
+      }
+if (users.length != 1) {
+        return res.send({
+          success: false,
+          message: 'Error: Invalid'
+        });
+      }
+         const user = users[0];
+      if (!user.validPassword(password)) {
+        return res.send({
+          success: false,
+          message: 'Error: Invalid'
+        });
+      }
 
-        if (users.length != 1) {
-          return res.send({
-            sucess: false,
-            message: "Error: Invalid"
-          });
-        }
-        const user = users[0];
-        if (!user.validPassword(password)) {
-          return res.send({
-            sucess: false,
-            message: "Error: Invalid"
-          });
-        }
-
-        const userSeassion = new UserSeassion();
-        userSeassion.userId = user._id;
-        userSeassion.save((err, doc) => {
+        // Otherwise correct user
+        const userSession = new UserSession();
+        userSession.userId = user._id;
+        userSession.save((err, doc) => {
           if (err) {
+            console.log(err);
             return res.send({
-              sucess: false,
-              message: "Error: Server Error"
+              success: false,
+              message: 'Error: server error'
             });
           }
           return res.send({
-            sucess: true,
-            message: "Valid Signin",
+            success: true,
+            message: 'Valid sign in',
             token: doc._id
-          })
+          });
         });
-      }
-    );
-  });
+      });
+    });
   app.get("/api/account/verify", (req, res, next) => {
     const {query} = req;
     const {token} = query;
 
-    UserSeassion.find({
+    UserSession.find({
       _id:token,
       isDeleted: false
     } , (err, seassion) =>{

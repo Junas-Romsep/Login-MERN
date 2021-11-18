@@ -1,12 +1,15 @@
 import React, { Component } from "react";
 import "whatwg-fetch";
-
 import { getFromStorage, setInStorage } from "../../utils/storage";
 
+// import{useState} from 'react';
+
 class Home extends Component {
+
   constructor(props) {
     super(props);
 
+  
     this.state = {
       isLoading: true,
       token: "",
@@ -141,64 +144,68 @@ class Home extends Component {
       });
   }
   onSignIn() {
-    const { signInEmail, signInPassword } = this.state;
+    
+    const {
+      signInEmail,
+      signInPassword,
+    } = this.state;
     this.setState({
-      isLoading: true
+      isLoading: true,
     });
-    fetch("/api/account/signin", {
-      method: "POST",
+    fetch('/api/account/signin', {
+      method: 'POST',
       headers: {
-        "Content-Type": "application/json"
+        'Content-Type': 'application/json'
       },
       body: JSON.stringify({
         email: signInEmail,
-        password: signInPassword
-      })
-    })
-      .then(res => res.json())
+        password: signInPassword,
+      }),
+    }).then(res => res.json())
       .then(json => {
-        console.log("json", json);
+        console.log('json', json);
         if (json.success) {
-          setInStorage("the_main_app", { token: json.token });
+          setInStorage('the_main_app', { token: json.token });
           this.setState({
             signInError: json.message,
             isLoading: false,
-            signInPassword: "",
-            signInEmail: "",
-            token: json.token
+            signInPassword: '',
+            signInEmail: '',
+            token: json.token,
           });
         } else {
           this.setState({
             signInError: json.message,
-            isLoading: false
+            isLoading: false,
           });
         }
       });
   }
   logout() {
     this.setState({
-      isLoading: true
+      isLoading: true,
     });
-    const obj = getFromStorage("the_main_app");
+    const obj = getFromStorage('the_main_app');
     if (obj && obj.token) {
       const { token } = obj;
-      fetch("api/account/logout?token=" + token)
+      // Verify token
+      fetch('/api/account/logout?token=' + token)
         .then(res => res.json())
         .then(json => {
           if (json.success) {
             this.setState({
-              token: "",
+              token: '',
               isLoading: false
             });
           } else {
             this.setState({
-              isLoading: false
+              isLoading: false,
             });
           }
         });
     } else {
       this.setState({
-        isLoading: false
+        isLoading: false,
       });
     }
   }
@@ -219,8 +226,16 @@ class Home extends Component {
       userInput: ""
     });
   }
+    /*/----------------------------------------------------------/*/
+ 
+    // const [inputValue,SetToDo] = useState({
+    //   todo:"",
+    //   iscompleted:false
+    //   })
+      /*/----------------------------------------------------------/*/
 
   render() {
+
     const {
       isLoading,
       token,
@@ -240,12 +255,13 @@ class Home extends Component {
         </div>
       );
     }
+    
     if (!token) {
       return (
         <div>
           <div>
             {signInError ? <p>{signInError}</p> : null}
-
+            <h1>Login</h1>
             <p>Sign In</p>
             <input
               type="email"
@@ -303,9 +319,11 @@ class Home extends Component {
         </div>
       );
     }
+ 
 
     return (
       <div className="to-do-list-main">
+          <h1>To do list</h1>
         <p>Account</p>
         <input
           onChange={e => this.changeUserInput(e.target.value)}
@@ -317,11 +335,11 @@ class Home extends Component {
           Add
         </button>
 
-        <ul>
+        <li>
           {this.state.list.map(val => (
             <li>{val}</li>
           ))}
-        </ul>
+        </li>
 
         <button onClick={this.logout}>Logout</button>
       </div>

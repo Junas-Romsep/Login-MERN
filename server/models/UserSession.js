@@ -1,6 +1,6 @@
 const mongoose = require("mongoose");
 
-const UserSeassionSchema = new mongoose.Schema({
+const UserSessionSchema = new mongoose.Schema({
   userId: {
     type: String,
     default: ''
@@ -15,4 +15,4 @@ const UserSeassionSchema = new mongoose.Schema({
   }
 });
 
-module.exports = mongoose.model("UserSeassion", UserSeassionSchema);
+module.exports = mongoose.model("UserSession", UserSessionSchema);
